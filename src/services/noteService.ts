@@ -25,27 +25,12 @@ const notesClient = axios.create({
     },
 });
 
-export async function fetchNotes(
-    search: string,
-    page: number = 1,
-    tag?: NoteTag,
-): Promise<FetchNotesResponse> {
-    try {
-        const { data } = await notesClient.get<FetchNotesResponse>('', {
-            params: {
-                search: search.trim() || undefined,
-                page,
-                tag: tag || undefined,
-                perPage: 10,
-                sortBy: 'created',
-            },
-        });
-
-        return data;
-    } catch (error) {
+notesClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
         if (axios.isAxiosError<ApiErrorResponse>(error)) {
             console.error(
-                'Axios message:',
+                'Axios error:',
                 error.response?.data?.message ||
                     error.response?.data?.status_message ||
                     error.message,
@@ -53,8 +38,25 @@ export async function fetchNotes(
         } else {
             console.error('Unexpected error:', error);
         }
-        throw error;
-    }
+        return Promise.reject(error);
+    },
+);
+
+export async function fetchNotes(
+    search: string = '',
+    page: number = 1,
+    tag?: NoteTag,
+): Promise<FetchNotesResponse> {
+    const { data } = await notesClient.get<FetchNotesResponse>('', {
+        params: {
+            search: search.trim() || undefined,
+            page,
+            tag: tag || undefined,
+            perPage: 10,
+            sortBy: 'created',
+        },
+    });
+    return data;
 }
 
 export async function createNote(noteData: CreateNoteInput): Promise<Note> {
