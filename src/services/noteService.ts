@@ -52,7 +52,7 @@ export async function fetchNotes(
             search: search.trim() || undefined,
             page,
             tag: tag || undefined,
-            perPage: 10,
+            perPage: 12,
             sortBy: 'created',
         },
     });
