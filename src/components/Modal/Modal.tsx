@@ -1,11 +1,45 @@
+import { useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import css from './Modal.module.css';
+import NoteForm from '../NoteForm/NoteForm';
 
-// Модальне вікно має створюватись через createPortal, щоб рендерити модалку поза межами основного дерева компонентів, та закриватися при кліку на бекдроп і натисканням на клавішу Escape.
+interface ModalProps {
+    children: ReactNode;
+    onClose: () => void;
+}
 
-export default function Modal() {
-    return (
-        <div className={css.backdrop} role="dialog" aria-modal="true">
-            <div className={css.modal}>{/* */}</div>
-        </div>
+export default function Modal({ children, onClose }: ModalProps) {
+    const handleBackdropClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        if (event.target === event.currentTarget) {
+            onClose();
+        }
+    };
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        document.body.style.overflow = 'hidden';
+
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            document.body.style.overflow = '';
+        };
+    }, [onClose]);
+
+    return createPortal(
+        <div
+            className={css.backdrop}
+            onClick={handleBackdropClick}
+            role="dialog"
+            aria-modal="true"
+        >
+            <div className={css.modal}>{children}</div>
+        </div>,
+        document.body,
     );
 }

@@ -1,23 +1,39 @@
+/* Types & Services */
+import { useDeleteNote } from '../../hooks/useNotes';
+import type { Note } from '../../types/note';
+
+/* Styles */
 import css from './NoteList.module.css';
 
-// Для отримання списку нотаток з бекенда, всіх інших запитів по роботі з колекцією нотаток та збереження серверних даних використовуйте TanStack Query.
+interface NoteListProps {
+    notes: Note[];
+}
 
-// Додайте умову, щоб компонент NoteList рендерився лише в тому випадку, якщо в колекції нотаток є хоча б один елемент.
+export default function NoteList({ notes }: NoteListProps) {
+    const { mutate: deleteNoteMutation } = useDeleteNote();
 
-// При натисканні на кнопку Delete в елементі списку нотаток, відповідна нотатка має видалятися на бекенді та оновлюватись збережені серверні дані.
+    if (notes.length === 0) {
+        return null;
+    }
 
-export default function NoteList() {
     return (
         <ul className={css.list}>
-            {/* Набір елементів списку нотаток */}
-            <li className={css.listItem}>
-                <h2 className={css.title}>Note title</h2>
-                <p className={css.content}>Note content</p>
-                <div className={css.footer}>
-                    <span className={css.tag}>Note tag</span>
-                    <button className={css.button}>Delete</button>
-                </div>
-            </li>
+            {notes.map((note) => (
+                <li key={note.id} className={css.listItem}>
+                    <h2 className={css.title}>{note.title}</h2>
+                    <p className={css.content}>{note.content}</p>
+                    <div className={css.footer}>
+                        <span className={css.tag}>{note.tag}</span>
+                        <button
+                            type="button"
+                            className={css.button}
+                            onClick={() => deleteNoteMutation(note.id)}
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </li>
+            ))}
         </ul>
     );
 }

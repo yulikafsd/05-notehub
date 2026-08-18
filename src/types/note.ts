@@ -8,3 +8,5 @@ export interface Note {
     updatedAt: string;
     tag: NoteTag;
 }
+
+export type NewNote = Omit<Note, 'id' | 'createdAt' | 'updatedAt'>;

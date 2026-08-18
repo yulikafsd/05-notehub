@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { NoteTag, Note } from '../types/note';
+import type { NoteTag, Note, NewNote } from '../types/note';
 
 export interface FetchNotesResponse {
     notes: Note[];
@@ -12,8 +12,6 @@ interface ApiErrorResponse {
     message?: string;
     success?: boolean;
 }
-
-export type CreateNoteInput = Omit<Note, 'id' | 'createdAt' | 'updatedAt'>;
 
 const myToken = import.meta.env.VITE_NOTEHUB_TOKEN;
 
@@ -59,7 +57,7 @@ export async function fetchNotes(
     return data;
 }
 
-export async function createNote(noteData: CreateNoteInput): Promise<Note> {
+export async function createNote(noteData: NewNote): Promise<Note> {
     const { data } = await notesClient.post<Note>('', noteData);
     return data;
 }

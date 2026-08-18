@@ -1,17 +1,109 @@
+/* Libs */
+import { useState, useEffect } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
+import { useDebouncedCallback } from 'use-debounce';
+
+/* Components */
+import SearchBox from '../SearchBox/SearchBox';
+import Loader from '../Loader/Loader';
+import NoteList from '../NoteList/NoteList';
+import ErrorMessage from '../ErrorMessage/ErrorMessage';
+import Modal from '../Modal/Modal';
+import NoteForm from '../NoteForm/NoteForm';
+import Pagination from '../Pagination/Pagination';
+
+/* Types and services */
+import { useNotes } from '../../hooks/useNotes';
+import type { Note } from '../../types/note';
+
+/* Styles */
 import css from './App.module.css';
 
-// Рекомендуємо створити окремі компоненти для відображення індикатора завантаження під час виконання HTTP-запитів, повідомлень про помилки та інших статусів запиту.
-
 export default function App() {
+    const [search, setSearch] = useState<string>('');
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+    const { data, isFetching, isError } = useNotes(search, currentPage);
+
+    const notes: Note[] = data?.notes || [];
+    const totalPages: number = data?.totalPages || 0;
+    const hasPages = totalPages > 1;
+
+    const isNoSearchResults =
+        !isFetching &&
+        !isError &&
+        Boolean(data) &&
+        notes.length === 0 &&
+        search.trim() !== '';
+
+    const isEmptyList = !isFetching && !isError && notes.length === 0;
+
+    const handleSearchChange = useDebouncedCallback((newSearch: string) => {
+        if (newSearch.length > 0 && newSearch.trim() === '') {
+            toast.error('Search query cannot contain only spaces.', {
+                id: 'empty-search-error',
+            });
+            return;
+        }
+
+        setSearch(newSearch);
+        setCurrentPage(1);
+    }, 300);
+
+    const openModal = () => setIsModalOpen(true);
+    const closeModal = () => setIsModalOpen(false);
+
+    useEffect(() => {
+        if (isNoSearchResults) {
+            toast.error('No notes found for your request.', {
+                id: 'no-notes',
+            });
+        }
+    }, [isNoSearchResults]);
+
     return (
         <div className={css.app}>
+            <Toaster position="top-right" />
             <header className={css.toolbar}>
-                {/* SearchBox */}
-                <button className={css.button}>Create note +</button>
-                {/* Pagination */}
+                <SearchBox value={search} onChange={handleSearchChange} />
+                {isFetching && <Loader />}
+                {!isFetching && hasPages && (
+                    <Pagination
+                        totalPages={totalPages}
+                        currentPage={currentPage}
+                        onPageChange={(page: number) => setCurrentPage(page)}
+                    />
+                )}
+                <button
+                    type="button"
+                    className={css.button}
+                    onClick={openModal}
+                >
+                    Create note +
+                </button>
             </header>
-            {/* Notelist */}
-            {/* Modal */}
+            {isError && (
+                <ErrorMessage
+                    message={'There was an error, please try again...'}
+                />
+            )}
+            {isEmptyList ? (
+                <ErrorMessage
+                    message={
+                        search.trim()
+                            ? 'No notes found'
+                            : 'There are no notes yet'
+                    }
+                />
+            ) : (
+                <NoteList notes={notes} />
+            )}
+            {isModalOpen && (
+                <Modal onClose={closeModal}>
+                    <NoteForm onClose={closeModal} />
+                </Modal>
+            )}
         </div>
     );
 }

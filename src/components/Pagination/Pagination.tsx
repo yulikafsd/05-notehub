@@ -1,5 +1,44 @@
-// import css from './Pagination.module.css';
+/* Libs */
+import ReactPaginateModule from 'react-paginate';
 
-// Реалізуйте компонент Pagination з використанням бібліотеки React Paginate.
+/* Types and services */
+import type { ReactPaginateProps } from 'react-paginate';
+import type { ComponentType } from 'react';
 
-// Додайте умову, щоб компонент Pagination рендерився лише в тому випадку, якщо кількість сторінок колекції нотаток більше 1.
+/* Styles */
+import css from './Pagination.module.css';
+
+type ModuleWithDefault<T> = { default: T };
+
+const ReactPaginate = (
+    ReactPaginateModule as unknown as ModuleWithDefault<
+        ComponentType<ReactPaginateProps>
+    >
+).default;
+
+interface PaginationProps {
+    totalPages: number;
+    currentPage: number;
+    onPageChange: (nextPage: number) => void;
+}
+
+export default function Pagination({
+    totalPages,
+    currentPage,
+    onPageChange,
+}: PaginationProps) {
+    return (
+        <ReactPaginate
+            // ЗМІНЕНО: передаємо точну кількість сторінок без обмеження в 500
+            pageCount={totalPages}
+            pageRangeDisplayed={5}
+            marginPagesDisplayed={1}
+            onPageChange={({ selected }) => onPageChange(selected + 1)}
+            forcePage={currentPage - 1}
+            containerClassName={css.pagination}
+            activeClassName={css.active}
+            nextLabel="→"
+            previousLabel="←"
+        />
+    );
+}
